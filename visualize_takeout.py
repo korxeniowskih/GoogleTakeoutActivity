@@ -107,20 +107,20 @@ def chart_top_actions(df: pd.DataFrame) -> None:
     plt.close(fig)
 
 
-def chart_android_timeline(df: pd.DataFrame) -> None:
-    android = df[df["service"] == "Android"].copy()
-    android = android.dropna(subset=["datetime_iso"])
-    if android.empty:
+def chart_monthly_activity(df: pd.DataFrame) -> None:
+    dated = df.dropna(subset=["datetime_iso"]).copy()
+    if dated.empty:
         return
-    android["date"] = pd.to_datetime(android["datetime_iso"]).dt.date
-    daily = android.groupby("date").size()
+    dated["month"] = pd.to_datetime(dated["datetime_iso"]).dt.to_period("M")
+    monthly = dated.groupby("month").size()
     fig, ax = plt.subplots(figsize=(12, 4))
-    daily.plot(ax=ax, color="#34A853", linewidth=1)
-    ax.set_title("Aktywność na urządzeniu Android (dzienna)")
-    ax.set_xlabel("Data")
-    ax.set_ylabel("Zdarzenia")
+    monthly.plot(ax=ax, color="#34A853", linewidth=1.5)
+    ax.set_title("Aktywność miesięczna (wszystkie usługi)")
+    ax.set_xlabel("Miesiąc")
+    ax.set_ylabel("Liczba zdarzeń")
+    ax.grid(True, alpha=0.3)
     fig.tight_layout()
-    fig.savefig(CHARTS_DIR / "06_android_timeline.png", dpi=150)
+    fig.savefig(CHARTS_DIR / "06_aktywnosc_miesiac.png", dpi=150)
     plt.close(fig)
 
 
@@ -162,7 +162,7 @@ def generate_report_html(summary: dict) -> None:
   <img src="charts/03_aktywnosc_rok.png" alt="Aktywność wg roku">
   <img src="charts/04_godziny_dnia.png" alt="Godziny dnia">
   <img src="charts/05_typy_czynnosci.png" alt="Typy czynności">
-  <img src="charts/06_android_timeline.png" alt="Android timeline">
+  <img src="charts/06_aktywnosc_miesiac.png" alt="Aktywność miesięczna">
 
   <h2>Top usługi</h2>
   <table>
@@ -190,7 +190,7 @@ def main() -> None:
     chart_activity_by_year(summary)
     chart_activity_by_hour(summary)
     chart_top_actions(df)
-    chart_android_timeline(df)
+    chart_monthly_activity(df)
     generate_report_html(summary)
 
     print(f"Wykresy zapisane w: {CHARTS_DIR}")
